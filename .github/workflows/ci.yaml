@@ -1,0 +1,28 @@
+name: CI
+on: 
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+      - name: Set up Node 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Install the Bruno CLI
+        run: npm install -g @usebruno/cli@4.3.0
+      - name: Start calc and its stub
+        run: docker compose -f compose.calc.yaml up --build -d --wait
+      - name: Component tests of calc
+        working-directory: tests/bruno
+        run: bru run calc calc-stub --env calc-component
+      - name: Stop calc and its stub
+        if: always()
+        run: docker compose -f compose.calc.yaml down
