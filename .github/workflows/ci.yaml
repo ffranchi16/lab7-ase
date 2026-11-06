@@ -11,13 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
       - name: Set up Node 22
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v3
         with:
           node-version: 22
       - name: Install the Bruno CLI
         run: npm install -g @usebruno/cli@4.3.0
+      # calc 
       - name: Start calc and its stub
         run: docker compose -f compose.calc.yaml up --build -d --wait
       - name: Component tests of calc
@@ -26,3 +27,24 @@ jobs:
       - name: Stop calc and its stub
         if: always()
         run: docker compose -f compose.calc.yaml down
+      # string 
+      - name: Start string and its stub
+        run: docker compose -f compose.string.yaml up --build -d --wait
+      - name: Component tests of string
+        working-directory: tests/bruno
+        run: bru run string string-stub --env string-component
+      - name: Stop string and its stub
+        if: always()
+        run: docker compose -f compose.string.yaml down
+      # integration test
+      - name: Start the whole application
+        run: docker compose up --build -d --wait
+      - name: Integration tests
+        working-directory: tests/bruno
+        run: bru run calc string --env integration
+      - name: Show the logs of the application
+        if: failure()
+        run: docker compose logs
+      - name: Stop the whole application
+        if: always()
+        run: docker compose down
